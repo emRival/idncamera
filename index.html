@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kamera IDN Pamijahan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f0f2f5;
+      }
+      .container {
+        max-width: 600px;
+      }
+      video,
+      canvas,
+      #previewImage {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        background-color: #000;
+      }
+      .hidden-download {
+        display: none;
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out forwards;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div
+      class="container bg-white p-6 rounded-3xl shadow-xl flex flex-col items-center space-y-6">
+      <!-- Header -->
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-blue-800">Kamera IDN Pamijahan</h1>
+        <p class="text-gray-600 mt-2">
+          Abadikan momen dengan QR code yang berisi informasi lengkap.
+        </p>
+      </div>
+
+      <!-- Video & Preview Section -->
+      <div
+        class="w-full relative bg-gray-900 rounded-3xl overflow-hidden shadow-lg">
+        <!-- Tampilan Kamera -->
+        <div id="cameraView" class="relative">
+          <video
+            id="cameraFeed"
+            class="w-full rounded-3xl"
+            autoplay
+            playsinline></video>
+          <canvas
+            id="photoCanvas"
+            class="hidden absolute top-0 left-0"></canvas>
+
+          <!-- Tombol Flip Kamera -->
+          <button
+            id="flipCameraButton"
+            class="absolute top-4 right-4 p-3 bg-white bg-opacity-70 rounded-full shadow-lg transition-all transform hover:scale-110 active:scale-95 focus:outline-none">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 text-blue-800"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Tampilan Pratinjau -->
+        <div id="previewView" class="hidden">
+          <img
+            id="previewImage"
+            class="w-full rounded-3xl fade-in"
+            src=""
+            alt="Preview Foto" />
+        </div>
+
+        <!-- Indikator Loading -->
+        <div
+          id="loadingIndicator"
+          class="absolute inset-0 flex items-center justify-center hidden bg-gray-900 bg-opacity-75 rounded-3xl">
+          <svg
+            class="animate-spin h-10 w-10 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24">
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Input Nama Guru -->
+      <div class="w-full" id="inputContainer">
+        <label for="namaGuru" class="block text-sm font-medium text-gray-700"
+          >Nama Guru:</label
+        >
+        <input
+          type="text"
+          id="namaGuru"
+          placeholder="Masukkan nama guru..."
+          class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex space-x-4 w-full">
+        <!-- Tombol untuk mengambil foto (tampil di tampilan kamera) -->
+        <button
+          id="captureButton"
+          class="w-full flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300">
+          Ambil Foto
+        </button>
+        <!-- Tombol untuk pratinjau (tampil di tampilan pratinjau) -->
+        <div id="previewButtons" class="hidden flex space-x-4 w-full">
+          <button
+            id="retakeButton"
+            class="w-full flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-gray-300">
+            Ambil Ulang
+          </button>
+          <button
+            id="saveButton"
+            class="w-full flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-300">
+            Simpan Foto
+          </button>
+        </div>
+      </div>
+
+      <!-- Hidden Download Link -->
+      <a id="downloadLink" class="hidden-download"></a>
+    </div>
+
+    <script>
+      // Mendapatkan elemen-elemen DOM
+      const cameraFeed = document.getElementById("cameraFeed");
+      const photoCanvas = document.getElementById("photoCanvas");
+      const namaGuruInput = document.getElementById("namaGuru");
+      const captureButton = document.getElementById("captureButton");
+      const saveButton = document.getElementById("saveButton");
+      const retakeButton = document.getElementById("retakeButton");
+      const downloadLink = document.getElementById("downloadLink");
+      const loadingIndicator = document.getElementById("loadingIndicator");
+      const cameraView = document.getElementById("cameraView");
+      const previewView = document.getElementById("previewView");
+      const previewImage = document.getElementById("previewImage");
+      const previewButtons = document.getElementById("previewButtons");
+      const inputContainer = document.getElementById("inputContainer");
+      const flipCameraButton = document.getElementById("flipCameraButton");
+
+      let cameraStream = null;
+      let cameraFacingMode = "environment"; // Default: kamera belakang
+      let logoImage = new Image();
+      let logoUrl =
+        "https://idn.sch.id/wp-content/uploads/2024/01/f0afb4b719f34cf6b147d499f50adddd.png";
+      let currentPosition = { latitude: null, longitude: null };
+
+      // Fungsi untuk mengambil nama guru dari localStorage
+      const getNamaGuru = () => {
+        return localStorage.getItem("namaGuru") || "";
+      };
+
+      // Fungsi untuk menyimpan nama guru ke localStorage
+      const saveNamaGuru = () => {
+        localStorage.setItem("namaGuru", namaGuruInput.value);
+      };
+
+      // Pemuatan logo dari URL eksternal
+      loadingIndicator.classList.remove("hidden");
+      logoImage.crossOrigin = "anonymous";
+      logoImage.onload = () => {
+        console.log("Logo berhasil dimuat.");
+        loadingIndicator.classList.add("hidden");
+        initCamera();
+      };
+      logoImage.onerror = () => {
+        console.error("Gagal memuat logo. Menggunakan fallback.");
+        loadingIndicator.classList.add("hidden");
+        initCamera();
+      };
+      logoImage.src = logoUrl;
+
+      // Mengisi input nama guru saat aplikasi dimuat
+      namaGuruInput.value = getNamaGuru();
+      namaGuruInput.addEventListener("input", saveNamaGuru);
+
+      // Fungsi untuk mendapatkan lokasi pengguna
+      const getLocation = () => {
+        return new Promise((resolve, reject) => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                currentPosition.latitude = position.coords.latitude.toFixed(6);
+                currentPosition.longitude =
+                  position.coords.longitude.toFixed(6);
+                console.log("Lokasi didapatkan:", currentPosition);
+                resolve(true);
+              },
+              (error) => {
+                if (error.code === error.PERMISSION_DENIED) {
+                  showCustomAlert(
+                    "Izin lokasi diperlukan untuk menggunakan kamera. Mohon aktifkan lokasi dan muat ulang halaman."
+                  );
+                } else {
+                  showCustomAlert(
+                    "Gagal mendapatkan lokasi. Mohon periksa pengaturan lokasi Anda."
+                  );
+                }
+                currentPosition.latitude = null;
+                currentPosition.longitude = null;
+                reject(error);
+              }
+            );
+          } else {
+            showCustomAlert("Browser Anda tidak mendukung geolokasi.");
+            reject(new Error("Geolocation not supported"));
+          }
+        });
+      };
+
+      // Panggil fungsi lokasi saat halaman dimuat
+      getLocation();
+
+      // Fungsi untuk memulai/mengaktifkan kamera
+      const initCamera = async () => {
+        try {
+          // Cek lokasi terlebih dahulu
+          await getLocation();
+
+          if (cameraStream) {
+            cameraStream.getTracks().forEach((track) => track.stop());
+          }
+
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error(
+              "Browser Anda tidak mendukung WebRTC (getUserMedia)."
+            );
+          }
+
+          const constraints = {
+            video: {
+              facingMode: cameraFacingMode,
+            },
+          };
+
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          cameraStream = stream;
+          cameraFeed.srcObject = stream;
+          await new Promise((resolve) => {
+            cameraFeed.onloadedmetadata = () => {
+              showCameraView();
+              resolve();
+            };
+          });
+        } catch (err) {
+          console.error("Error:", err);
+          showCustomAlert(
+            err.message || "Terjadi kesalahan saat mengakses kamera."
+          );
+          return;
+        }
+      };
+
+      // Fungsi untuk membalik kamera
+      const flipCamera = () => {
+        cameraFacingMode =
+          cameraFacingMode === "environment" ? "user" : "environment";
+        initCamera();
+      };
+
+      // Fungsi untuk menampilkan tampilan kamera
+      const showCameraView = () => {
+        cameraView.classList.remove("hidden");
+        previewView.classList.add("hidden");
+        captureButton.classList.remove("hidden");
+        previewButtons.classList.add("hidden");
+        inputContainer.classList.remove("hidden");
+      };
+
+      // Fungsi untuk menampilkan tampilan pratinjau
+      const showPreviewView = (imageDataUrl) => {
+        cameraView.classList.add("hidden");
+        previewImage.src = imageDataUrl;
+        previewView.classList.remove("hidden");
+        captureButton.classList.add("hidden");
+        previewButtons.classList.remove("hidden");
+        inputContainer.classList.add("hidden");
+      };
+
+      // Fungsi untuk menghasilkan string acak
+      const generateRandomString = (length) => {
+        const characters =
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let result = "";
+        for (let i = 0; i < length; i++) {
+          result += characters.charAt(
+            Math.floor(Math.random() * characters.length)
+          );
+        }
+        return result;
+      };
+
+      // Fungsi untuk menghasilkan QR Code
+      const generateQRCode = (data, size = 128) => {
+        return new Promise((resolve) => {
+          // Buat elemen div sementara
+          const tempDiv = document.createElement("div");
+          tempDiv.style.position = "absolute";
+          tempDiv.style.left = "-9999px";
+          document.body.appendChild(tempDiv);
+
+          // Buat QRCode di dalam div
+          const qr = new QRCode(tempDiv, {
+            text: data,
+            width: size,
+            height: size,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H,
+          });
+
+          // Tunggu sampai QRCode selesai dirender ke dalam img/canvas
+          setTimeout(() => {
+            // Cari elemen img atau canvas di dalam tempDiv
+            let qrImg = tempDiv.querySelector("img");
+            let qrCanvas = tempDiv.querySelector("canvas");
+            let qrElement = qrImg || qrCanvas;
+            if (qrElement) {
+              // Buat canvas baru dan gambar QR ke dalamnya
+              const canvas = document.createElement("canvas");
+              canvas.width = size;
+              canvas.height = size;
+              const ctx = canvas.getContext("2d");
+              if (qrImg) {
+                // Jika QRCode berupa img
+                qrImg.onload = () => {
+                  ctx.drawImage(qrImg, 0, 0, size, size);
+                  document.body.removeChild(tempDiv);
+                  resolve(canvas);
+                };
+                // Jika sudah ter-load, langsung gambar
+                if (qrImg.complete) {
+                  ctx.drawImage(qrImg, 0, 0, size, size);
+                  document.body.removeChild(tempDiv);
+                  resolve(canvas);
+                }
+              } else if (qrCanvas) {
+                // Jika QRCode berupa canvas
+                ctx.drawImage(qrCanvas, 0, 0, size, size);
+                document.body.removeChild(tempDiv);
+                resolve(canvas);
+              }
+            } else {
+              document.body.removeChild(tempDiv);
+              resolve(null);
+            }
+          }, 100); // Delay kecil agar QRCode sempat dirender
+        });
+      };
+
+      // Fungsi untuk mengambil foto dan menambahkan watermark
+      const capturePhoto = async () => {
+        if (!cameraStream) {
+          showCustomAlert("Kamera belum aktif!");
+          return;
+        }
+
+        // Canvas untuk foto mentah dari kamera
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = cameraFeed.videoWidth;
+        tempCanvas.height = cameraFeed.videoHeight;
+        const tempCtx = tempCanvas.getContext("2d");
+
+        // Perbaiki orientasi jika menggunakan kamera depan
+        if (cameraFacingMode === "user") {
+          tempCtx.save();
+          tempCtx.scale(-1, 1);
+          tempCtx.drawImage(
+            cameraFeed,
+            -tempCanvas.width,
+            0,
+            tempCanvas.width,
+            tempCanvas.height
+          );
+          tempCtx.restore();
+        } else {
+          tempCtx.drawImage(
+            cameraFeed,
+            0,
+            0,
+            tempCanvas.width,
+            tempCanvas.height
+          );
+        }
+
+        // Canvas akhir untuk photocard
+        const cardCanvas = photoCanvas;
+        const photoWidth = tempCanvas.width;
+        const photoHeight = tempCanvas.height;
+
+        const frameMargin = photoWidth * 0.05;
+        const bottomFrameHeight = photoHeight * 0.2;
+
+        const cardWidth = photoWidth + frameMargin * 2;
+        const cardHeight = photoHeight + frameMargin + bottomFrameHeight;
+
+        cardCanvas.width = cardWidth;
+        cardCanvas.height = cardHeight;
+        const cardCtx = cardCanvas.getContext("2d");
+
+        // Menggambar bingkai putih solid
+        cardCtx.fillStyle = "#ffffff";
+        cardCtx.fillRect(0, 0, cardWidth, cardHeight);
+
+        // Menggambar foto ke dalam bingkai
+        cardCtx.drawImage(
+          tempCanvas,
+          frameMargin,
+          frameMargin,
+          photoWidth,
+          photoHeight
+        );
+
+        // Mendefinisikan properti untuk watermark
+        const guruName = namaGuruInput.value || "Guru tidak bernama";
+        const date = new Date();
+        const days = [
+          "Minggu",
+          "Senin",
+          "Selasa",
+          "Rabu",
+          "Kamis",
+          "Jumat",
+          "Sabtu",
+        ];
+        const dayName = days[date.getDay()];
+
+        const timestamp = `${dayName}, ${date
+          .toLocaleString("id-ID", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })
+          .replace(/\./g, ":")}`;
+
+        const locationText = "IDN Pamijahan";
+        const watermarkText = `@byIDNPamijahanSystem`;
+
+        // Area untuk watermark di dalam foto
+        const watermarkAreaX = frameMargin;
+        const watermarkAreaY = frameMargin;
+        const watermarkAreaWidth = photoWidth;
+        const watermarkAreaHeight = photoHeight;
+
+        // Menggambar logo di kiri atas foto
+        if (logoImage.complete && logoImage.naturalHeight !== 0) {
+          const logoSize = watermarkAreaWidth * 0.18; // Memperbesar ukuran logo
+          const logoHeight =
+            (logoImage.naturalHeight / logoImage.naturalWidth) * logoSize;
+          cardCtx.globalAlpha = 0.9; // Meningkatkan opacity sedikit
+          cardCtx.drawImage(
+            logoImage,
+            watermarkAreaX + frameMargin,
+            watermarkAreaY + frameMargin,
+            logoSize,
+            logoHeight
+          );
+          cardCtx.globalAlpha = 1.0;
+        }
+
+        // Menggambar area teks di kanan atas foto
+        const textLines = [guruName, timestamp];
+        const textFontSize = watermarkAreaHeight * 0.037; // Ukuran font sedikit lebih besar
+        const textFont = `bold ${textFontSize}px 'Inter', sans-serif`;
+        const textLineHeight = textFontSize * 1.2; // Jarak antar baris lebih rapat
+        const textPadding = 10;
+        const textXEnd = watermarkAreaX + watermarkAreaWidth - frameMargin;
+        let textYStart = watermarkAreaY + frameMargin;
+
+        cardCtx.font = textFont;
+        cardCtx.textBaseline = "top";
+        cardCtx.textAlign = "right";
+
+        const textWidths = textLines.map(
+          (line) => cardCtx.measureText(line).width
+        );
+        const maxTextWidth = Math.max(...textWidths);
+        const textBgWidth = maxTextWidth + textPadding * 2;
+        const textBgHeight = textLines.length * textLineHeight + textPadding;
+
+        cardCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+        cardCtx.beginPath();
+        cardCtx.roundRect(
+          textXEnd - textBgWidth,
+          textYStart,
+          textBgWidth,
+          textBgHeight,
+          10
+        );
+        cardCtx.fill();
+
+        cardCtx.fillStyle = "#ffffff";
+        let textY = textYStart + textPadding / 2;
+        for (const line of textLines) {
+          cardCtx.fillText(line, textXEnd - textPadding, textY);
+          textY += textLineHeight;
+        }
+
+        // Menggambar QR Code di sudut kiri bawah foto
+        // Generate unique identifiers
+        const qrPrefix = generateRandomString(8);
+        const qrSuffix = generateRandomString(8);
+        const timestamp_encoded = btoa(timestamp);
+        const location_encoded = btoa(locationText);
+        const name_encoded = btoa(guruName);
+
+        // Create a more secure format with Base64 encoding and checksums
+        const qrCodeData = `IDN${qrPrefix}#${name_encoded}#${timestamp_encoded}#${location_encoded}#${qrSuffix}`;
+        const qrCodeSize = watermarkAreaWidth * 0.14; // Ukuran QR yang lebih kecil
+        // Generate QR dengan ukuran 2.5x untuk kualitas lebih baik
+        const qrCodeCanvas = await generateQRCode(qrCodeData, qrCodeSize * 2.5);
+
+        // Menambahkan frame putih untuk QR code
+        const qrFramePadding = qrCodeSize * 0.1; // Padding lebih besar untuk frame putih
+
+        // Gambar background putih untuk QR
+        cardCtx.fillStyle = "#ffffff";
+        cardCtx.fillRect(
+          watermarkAreaX + frameMargin - qrFramePadding,
+          watermarkAreaY +
+            watermarkAreaHeight -
+            qrCodeSize -
+            frameMargin -
+            qrFramePadding,
+          qrCodeSize + qrFramePadding * 2,
+          qrCodeSize + qrFramePadding * 2
+        );
+
+        // Gambar QR code
+        cardCtx.drawImage(
+          qrCodeCanvas,
+          watermarkAreaX + frameMargin,
+          watermarkAreaY + watermarkAreaHeight - qrCodeSize - frameMargin,
+          qrCodeSize,
+          qrCodeSize
+        );
+
+        // Menggambar watermark di bingkai bawah dengan style yang lebih elegan
+        cardCtx.fillStyle = "#1e40af"; // Warna biru tua yang lebih elegan
+        cardCtx.font = `600 ${bottomFrameHeight * 0.2}px 'Inter', sans-serif`; // Ukuran lebih kecil, weight medium
+        cardCtx.textAlign = "center";
+        cardCtx.textBaseline = "middle";
+
+        // Menambah bayangan teks untuk kedalaman
+        cardCtx.shadowColor = "rgba(0, 0, 0, 0.2)";
+        cardCtx.shadowBlur = 2;
+        cardCtx.shadowOffsetX = 1;
+        cardCtx.shadowOffsetY = 1;
+
+        cardCtx.fillText(
+          watermarkText,
+          cardWidth / 2,
+          cardHeight - bottomFrameHeight / 2
+        );
+
+        // Reset shadow
+        cardCtx.shadowColor = "transparent";
+        cardCtx.shadowBlur = 0;
+        cardCtx.shadowOffsetX = 0;
+        cardCtx.shadowOffsetY = 0;
+
+        // Tampilkan pratinjau
+        const imageDataURL = cardCanvas.toDataURL("image/png");
+        showPreviewView(imageDataURL);
+
+        // Hentikan stream kamera
+        if (cameraStream) {
+          cameraStream.getTracks().forEach((track) => track.stop());
+          cameraStream = null;
+        }
+      };
+
+      // Fungsi untuk menyimpan foto
+      const savePhoto = () => {
+        const imageDataURL = photoCanvas.toDataURL("image/png");
+        downloadLink.href = imageDataURL;
+        downloadLink.download = `foto_idn_pamijahan_${new Date().getTime()}.png`;
+        downloadLink.click();
+
+        // Kembali ke tampilan kamera
+        initCamera();
+        getLocation();
+      };
+
+      // Fungsi untuk mengambil ulang foto
+      const retakePhoto = () => {
+        initCamera();
+        getLocation();
+      };
+
+      // Event Listeners untuk tombol
+      captureButton.addEventListener("click", capturePhoto);
+      saveButton.addEventListener("click", savePhoto);
+      retakeButton.addEventListener("click", retakePhoto);
+      flipCameraButton.addEventListener("click", flipCamera);
+
+      // Fungsi modal kustom (untuk menggantikan alert)
+      function showCustomAlert(message) {
+        console.error(message);
+      }
+    </script>
+  </body>
+</html>
