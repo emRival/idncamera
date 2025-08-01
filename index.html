@@ -14,8 +14,44 @@
         font-family: "Inter", sans-serif;
         background-color: #f0f2f5;
       }
+      @media (orientation: portrait) {
+        body::before {
+          content: "Mohon putar perangkat Anda ke mode landscape";
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.9);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 20px;
+          z-index: 9999;
+          font-size: 1.2rem;
+        }
+      }
       .container {
-        max-width: 600px;
+        width: 90vw;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        padding: 1rem;
+      }
+      .left-section {
+        flex: 7;
+        display: flex;
+        flex-direction: column;
+      }
+      .right-section {
+        flex: 3;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 1rem;
       }
       video,
       canvas,
@@ -45,20 +81,11 @@
     </style>
   </head>
   <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-    <div
-      class="container bg-white p-6 rounded-3xl shadow-xl flex flex-col items-center space-y-6">
-      <!-- Header -->
-      <div class="text-center">
-        <h1 class="text-3xl font-bold text-blue-800">Kamera IDN Pamijahan</h1>
-        <p class="text-gray-600 mt-2">
-          Abadikan momen dengan QR code yang berisi informasi lengkap.
-        </p>
-      </div>
-
-      <!-- Video & Preview Section -->
-      <div
-        class="w-full relative bg-gray-900 rounded-3xl overflow-hidden shadow-lg">
-        <!-- Tampilan Kamera -->
+    <div class="container bg-white rounded-3xl shadow-xl">
+      <div class="left-section">
+        <!-- Video & Preview Section -->
+        <div class="relative bg-gray-900 rounded-3xl overflow-hidden shadow-lg h-full">
+          <!-- Tampilan Kamera -->
         <div id="cameraView" class="relative">
           <video
             id="cameraFeed"
@@ -121,43 +148,56 @@
         </div>
       </div>
 
-      <!-- Input Nama Guru -->
-      <div class="w-full" id="inputContainer">
-        <label for="namaGuru" class="block text-sm font-medium text-gray-700"
-          >Nama Guru:</label
-        >
-        <input
-          type="text"
-          id="namaGuru"
-          placeholder="Masukkan nama guru..."
-          class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors" />
       </div>
-
-      <!-- Buttons -->
-      <div class="flex space-x-4 w-full">
-        <!-- Tombol untuk mengambil foto (tampil di tampilan kamera) -->
-        <button
-          id="captureButton"
-          class="w-full flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300">
-          Ambil Foto
-        </button>
-        <!-- Tombol untuk pratinjau (tampil di tampilan pratinjau) -->
-        <div id="previewButtons" class="hidden flex space-x-4 w-full">
-          <button
-            id="retakeButton"
-            class="w-full flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-gray-300">
-            Ambil Ulang
-          </button>
-          <button
-            id="saveButton"
-            class="w-full flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-300">
-            Simpan Foto
-          </button>
+      </div>
+      
+      <div class="right-section">
+        <!-- Header -->
+        <div class="text-center mb-4">
+          <h1 class="text-2xl font-bold text-blue-800">Kamera IDN Pamijahan</h1>
+          <p class="text-gray-600 mt-2 text-sm">
+            Abadikan momen dengan QR code yang berisi informasi lengkap.
+          </p>
         </div>
-      </div>
 
-      <!-- Hidden Download Link -->
-      <a id="downloadLink" class="hidden-download"></a>
+        <!-- Input Nama Guru -->
+        <div class="w-full" id="inputContainer">
+          <label for="namaGuru" class="block text-sm font-medium text-gray-700"
+            >Nama Guru:</label
+          >
+          <input
+            type="text"
+            id="namaGuru"
+            placeholder="Masukkan nama guru..."
+            class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex flex-col space-y-3">
+          <!-- Tombol untuk mengambil foto (tampil di tampilan kamera) -->
+          <button
+            id="captureButton"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300">
+            Ambil Foto
+          </button>
+          <!-- Tombol untuk pratinjau (tampil di tampilan pratinjau) -->
+          <div id="previewButtons" class="hidden flex flex-col space-y-3 w-full">
+            <button
+              id="retakeButton"
+              class="w-full bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-gray-300">
+              Ambil Ulang
+            </button>
+            <button
+              id="saveButton"
+              class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-300">
+              Simpan Foto
+            </button>
+          </div>
+        </div>
+
+        <!-- Hidden Download Link -->
+        <a id="downloadLink" class="hidden-download"></a>
+      </div>
     </div>
 
     <script>
@@ -297,8 +337,18 @@
         initCamera();
       };
 
+      // Fungsi untuk memaksa mode landscape
+      const enforceLandscape = () => {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(err => {
+            console.log('Orientasi tidak dapat dikunci:', err);
+          });
+        }
+      };
+
       // Fungsi untuk menampilkan tampilan kamera
       const showCameraView = () => {
+        enforceLandscape();
         cameraView.classList.remove("hidden");
         previewView.classList.add("hidden");
         captureButton.classList.remove("hidden");
@@ -308,12 +358,12 @@
 
       // Fungsi untuk menampilkan tampilan pratinjau
       const showPreviewView = (imageDataUrl) => {
+        enforceLandscape();
         cameraView.classList.add("hidden");
         previewImage.src = imageDataUrl;
         previewView.classList.remove("hidden");
         captureButton.classList.add("hidden");
         previewButtons.classList.remove("hidden");
-        inputContainer.classList.add("hidden");
       };
 
       // Fungsi untuk menghasilkan string acak
@@ -553,7 +603,7 @@
         const qrCodeCanvas = await generateQRCode(qrCodeData, qrCodeSize * 2.5);
 
         // Menambahkan frame putih untuk QR code
-        const qrFramePadding = qrCodeSize * 0.1; // Padding lebih besar untuk frame putih
+        const qrFramePadding = qrCodeSize * 0.2; // Padding lebih besar untuk frame putih
 
         // Gambar background putih untuk QR
         cardCtx.fillStyle = "#ffffff";
