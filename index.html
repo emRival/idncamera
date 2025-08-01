@@ -2,7 +2,9 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Kamera IDN Pamijahan</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,66 +12,122 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         font-family: "Inter", sans-serif;
         background-color: #f0f2f5;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        overflow: hidden;
       }
-      @media (orientation: portrait) {
-        body::before {
-          content: "Mohon putar perangkat Anda ke mode landscape";
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0,0,0,0.9);
-          color: white;
+
+      .orientation-alert {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+        z-index: 9999;
+        font-size: 1.2rem;
+      }
+
+      @media (max-width: 767px) and (orientation: portrait) {
+        .orientation-alert {
           display: flex;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          padding: 20px;
-          z-index: 9999;
-          font-size: 1.2rem;
         }
       }
+
       .container {
-        width: 90vw;
-        max-height: 90vh;
+        width: 100%;
+        max-width: 1400px;
+        height: 100%;
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         gap: 1rem;
         padding: 1rem;
+        margin: 0 auto;
       }
+
+      @media (min-width: 768px) {
+        .container {
+          flex-direction: row;
+          height: 95vh;
+          max-height: 100vh;
+        }
+      }
+
       .left-section {
-        flex: 7;
-        display: flex;
-        flex-direction: column;
+        flex: 1;
+        min-height: 300px;
+        position: relative;
       }
+
       .right-section {
-        flex: 3;
+        flex: 1;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        gap: 1rem;
+        gap: 1.5rem;
+        padding: 0.5rem;
+        min-width: 300px;
       }
+
+      @media (min-width: 768px) {
+        .left-section {
+          flex: 7;
+        }
+        .right-section {
+          flex: 3;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .right-section {
+          padding: 0;
+        }
+      }
+
       video,
       canvas,
       #previewImage {
         display: block;
         width: 100%;
-        height: auto;
+        height: 100%;
         border-radius: 1rem;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
           0 2px 4px -1px rgba(0, 0, 0, 0.06);
         background-color: #000;
+        object-fit: cover;
       }
+
+      .camera-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        border-radius: 1rem;
+        overflow: hidden;
+      }
+
       .hidden-download {
         display: none;
       }
+
       .fade-in {
         animation: fadeIn 0.5s ease-in-out forwards;
       }
+
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -78,127 +136,346 @@
           opacity: 1;
         }
       }
+
+      .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        width: 100%;
+      }
+
+      @media (min-width: 768px) {
+        .button-group {
+          gap: 1rem;
+        }
+      }
+
+      .btn {
+        width: 100%;
+        font-weight: bold;
+        padding: 0.8rem;
+        border-radius: 9999px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-capture {
+        background-color: #2563eb;
+        color: white;
+      }
+
+      .btn-capture:hover {
+        background-color: #1d4ed8;
+      }
+
+      .btn-retake {
+        background-color: #6b7280;
+        color: white;
+      }
+
+      .btn-retake:hover {
+        background-color: #4b5563;
+      }
+
+      .btn-save {
+        background-color: #10b981;
+        color: white;
+      }
+
+      .btn-save:hover {
+        background-color: #059669;
+      }
+
+      .flip-btn {
+        position: absolute;
+        top: 0.8rem;
+        right: 0.8rem;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+        border-radius: 1rem;
+        display: none;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .header {
+        text-align: center;
+        padding: 0.5rem 0;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1e40af;
+        margin-bottom: 0.25rem;
+      }
+
+      .header p {
+        color: #4b5563;
+        font-size: 0.875rem;
+      }
+
+      .input-container {
+        width: 100%;
+      }
+
+      .input-container label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        color: #374151;
+        font-weight: 500;
+      }
+
+      .input-container input {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 9999px;
+        font-size: 0.9rem;
+      }
+
+      .input-container input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+
+      .preview-container {
+        display: none;
+        width: 100%;
+        height: 100%;
+        border-radius: 1rem;
+        overflow: hidden;
+      }
+
+      .preview-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .flex {
+        display: flex;
+      }
+
+      /* Scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #c5c5c5;
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+      }
     </style>
   </head>
-  <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-    <div class="container bg-white rounded-3xl shadow-xl">
+  <body class="flex items-center justify-center min-h-screen p-2 sm:p-4">
+    <!-- Orientation alert -->
+    <div class="orientation-alert">
+      <div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-16 w-16 mx-auto mb-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+        <p class="text-xl font-medium mb-2">
+          Mohon putar perangkat Anda ke mode landscape
+        </p>
+        <p class="text-gray-300">
+          Untuk pengalaman terbaik, gunakan perangkat dalam orientasi landscape
+        </p>
+      </div>
+    </div>
+
+    <div class="container bg-white rounded-2xl shadow-xl overflow-hidden">
       <div class="left-section">
-        <!-- Video & Preview Section -->
-        <div class="relative bg-gray-900 rounded-3xl overflow-hidden shadow-lg h-full">
-          <!-- Tampilan Kamera -->
-        <div id="cameraView" class="relative">
-          <video
-            id="cameraFeed"
-            class="w-full rounded-3xl"
-            autoplay
-            playsinline></video>
-          <canvas
-            id="photoCanvas"
-            class="hidden absolute top-0 left-0"></canvas>
+        <div class="camera-container">
+          <!-- Camera View -->
+          <div id="cameraView">
+            <video id="cameraFeed" autoplay playsinline></video>
+            <canvas
+              id="photoCanvas"
+              class="hidden absolute top-0 left-0"></canvas>
 
-          <!-- Tombol Flip Kamera -->
-          <button
-            id="flipCameraButton"
-            class="absolute top-4 right-4 p-3 bg-white bg-opacity-70 rounded-full shadow-lg transition-all transform hover:scale-110 active:scale-95 focus:outline-none">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-blue-800"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-            </svg>
-          </button>
-        </div>
+            <!-- Flip Camera Button -->
+            <button id="flipCameraButton" class="flip-btn">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-blue-800"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+            </button>
+          </div>
 
-        <!-- Tampilan Pratinjau -->
-        <div id="previewView" class="hidden">
-          <img
-            id="previewImage"
-            class="w-full rounded-3xl fade-in"
-            src=""
-            alt="Preview Foto" />
-        </div>
+          <!-- Preview View -->
+          <div id="previewView" class="preview-container">
+            <img id="previewImage" class="fade-in" src="" alt="Preview Foto" />
+          </div>
 
-        <!-- Indikator Loading -->
-        <div
-          id="loadingIndicator"
-          class="absolute inset-0 flex items-center justify-center hidden bg-gray-900 bg-opacity-75 rounded-3xl">
-          <svg
-            class="animate-spin h-10 w-10 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24">
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+          <!-- Loading Indicator -->
+          <div id="loadingIndicator" class="loading-overlay">
+            <div class="spinner"></div>
+          </div>
         </div>
       </div>
 
-      </div>
-      </div>
-      
       <div class="right-section">
         <!-- Header -->
-        <div class="text-center mb-4">
-          <h1 class="text-2xl font-bold text-blue-800">Kamera IDN Pamijahan</h1>
-          <p class="text-gray-600 mt-2 text-sm">
-            Abadikan momen dengan QR code yang berisi informasi lengkap.
-          </p>
+        <div class="header">
+          <h1>PMJ TimeStamp System</h1>
         </div>
 
         <!-- Input Nama Guru -->
-        <div class="w-full" id="inputContainer">
-          <label for="namaGuru" class="block text-sm font-medium text-gray-700"
-            >Nama Guru:</label
-          >
+        <div class="input-container" id="inputContainer">
+          <label for="namaGuru">Nama Guru:</label>
           <input
             type="text"
             id="namaGuru"
-            placeholder="Masukkan nama guru..."
-            class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+            placeholder="Masukkan nama guru..." />
         </div>
 
         <!-- Buttons -->
-        <div class="flex flex-col space-y-3">
-          <!-- Tombol untuk mengambil foto (tampil di tampilan kamera) -->
-          <button
-            id="captureButton"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300">
-            Ambil Foto
+        <div class="button-group">
+          <!-- Capture Button -->
+          <button id="captureButton" class="btn btn-capture">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
           </button>
-          <!-- Tombol untuk pratinjau (tampil di tampilan pratinjau) -->
-          <div id="previewButtons" class="hidden flex flex-col space-y-3 w-full">
-            <button
-              id="retakeButton"
-              class="w-full bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-gray-300">
-              Ambil Ulang
+
+          <!-- Preview Buttons -->
+          <div id="previewButtons" class="button-group hidden">
+            <button id="retakeButton" class="btn btn-retake">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
             </button>
-            <button
-              id="saveButton"
-              class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-300">
-              Simpan Foto
+            <button id="saveButton" class="btn btn-save">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              </svg>
+            </button>
+            <button id="shareButton" class="btn btn-save">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 12v.01M12 4v.01M20 12v.01M12 20v.01M16.24 7.76l-.01-.01M7.76 16.24l-.01-.01M16.24 16.24l-.01-.01M7.76 7.76l-.01-.01" />
+              </svg>
             </button>
           </div>
         </div>
-
-        <!-- Hidden Download Link -->
-        <a id="downloadLink" class="hidden-download"></a>
       </div>
     </div>
+
+    <!-- Hidden Download Link -->
+    <a id="downloadLink" class="hidden-download"></a>
 
     <script>
       // Mendapatkan elemen-elemen DOM
@@ -235,16 +512,16 @@
       };
 
       // Pemuatan logo dari URL eksternal
-      loadingIndicator.classList.remove("hidden");
+      loadingIndicator.style.display = "flex";
       logoImage.crossOrigin = "anonymous";
       logoImage.onload = () => {
         console.log("Logo berhasil dimuat.");
-        loadingIndicator.classList.add("hidden");
+        loadingIndicator.style.display = "none";
         initCamera();
       };
       logoImage.onerror = () => {
         console.error("Gagal memuat logo. Menggunakan fallback.");
-        loadingIndicator.classList.add("hidden");
+        loadingIndicator.style.display = "none";
         initCamera();
       };
       logoImage.src = logoUrl;
@@ -337,33 +614,23 @@
         initCamera();
       };
 
-      // Fungsi untuk memaksa mode landscape
-      const enforceLandscape = () => {
-        if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('landscape').catch(err => {
-            console.log('Orientasi tidak dapat dikunci:', err);
-          });
-        }
-      };
-
       // Fungsi untuk menampilkan tampilan kamera
       const showCameraView = () => {
-        enforceLandscape();
-        cameraView.classList.remove("hidden");
-        previewView.classList.add("hidden");
-        captureButton.classList.remove("hidden");
-        previewButtons.classList.add("hidden");
-        inputContainer.classList.remove("hidden");
+        cameraView.style.display = "block";
+        previewView.style.display = "none";
+        captureButton.style.display = "flex";
+        previewButtons.style.display = "none";
+        inputContainer.style.display = "block";
       };
 
       // Fungsi untuk menampilkan tampilan pratinjau
       const showPreviewView = (imageDataUrl) => {
-        enforceLandscape();
-        cameraView.classList.add("hidden");
+        cameraView.style.display = "none";
         previewImage.src = imageDataUrl;
-        previewView.classList.remove("hidden");
-        captureButton.classList.add("hidden");
-        previewButtons.classList.remove("hidden");
+        previewView.style.display = "block";
+        captureButton.style.display = "none";
+        previewButtons.style.display = "flex";
+        inputContainer.style.display = "none";
       };
 
       // Fungsi untuk menghasilkan string acak
@@ -680,16 +947,47 @@
         getLocation();
       };
 
+      // Fungsi untuk berbagi foto
+      const sharePhoto = async () => {
+        if (navigator.share) {
+          const imageDataURL = photoCanvas.toDataURL("image/png");
+          const blob = await (await fetch(imageDataURL)).blob();
+          const file = new File(
+            [blob],
+            `foto_idn_pamijahan_${new Date().getTime()}.png`,
+            { type: blob.type }
+          );
+
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Foto IDN Pamijahan",
+              text: "Berikut adalah foto yang diambil menggunakan aplikasi IDN Pamijahan.",
+            });
+            console.log("Foto berhasil dibagikan.");
+          } catch (error) {
+            console.error("Gagal membagikan foto:", error);
+          }
+        } else {
+          alert("Fitur berbagi tidak didukung di perangkat ini.");
+        }
+      };
+
       // Event Listeners untuk tombol
       captureButton.addEventListener("click", capturePhoto);
       saveButton.addEventListener("click", savePhoto);
       retakeButton.addEventListener("click", retakePhoto);
       flipCameraButton.addEventListener("click", flipCamera);
+      const shareButton = document.getElementById("shareButton");
+      shareButton.addEventListener("click", sharePhoto);
 
       // Fungsi modal kustom (untuk menggantikan alert)
       function showCustomAlert(message) {
-        console.error(message);
+        alert(message);
       }
+
+      // Inisialisasi kamera saat halaman dimuat
+      window.addEventListener("load", initCamera);
     </script>
   </body>
 </html>
